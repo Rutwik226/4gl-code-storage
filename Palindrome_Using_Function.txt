@@ -1,0 +1,36 @@
+####################################################################################
+# Program Name: ZSPEPLNDRM
+# Description : Palindrome Script for task assigned in Sage X3 functional training session
+# Author      : GT-0855 // GT-RB
+# Date        : 29-08-2024
+# Type        : SPE
+####################################################################################
+# 000   Original version
+####################################################################################
+
+
+
+Local Char ZSTR(20)
+ZSTR = func CHECKPLN("madama")
+infbox ZSTR
+END
+
+Funprog CHECKPLN(ZINPUTPLNDRM)
+  Value Char ZSTORE : ZSTORE = ZINPUTPLNDRM
+  Local Char ZREVERSEDSTRING(30), ZOUTPUT(20)
+  Local integer ZI, ZLENGTH
+  ZLENGTH = len(ZSTORE)
+  For ZI = ZLENGTH to 1 step -1
+    [L]ZREVERSEDSTRING += mid$([L] ZSTORE, ZI, 1)
+  Next ZI
+  If [L]ZSTORE = [L]ZREVERSEDSTRING
+    ZOUTPUT = "Palindrome"
+  else 
+    ZOUTPUT = "Not palindrome"
+  EndIf
+END ZOUTPUT
+
+
+
+
+

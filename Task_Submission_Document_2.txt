@@ -1,0 +1,519 @@
+####################################################################################
+# Program Name: ZSPESTDA
+# Description : Action Types Task Completion Script on Action-Based Window Assigned by Shraddha Mam
+# Author      : GT-RB
+# Date        : 11-09-2024
+# Type        : SPE
+####################################################################################
+# 000   Original version
+####################################################################################
+####################################################################################
+
+$Action
+#infbox action
+Case Action
+   When "OK" : Gosub OK
+  When "DEBUT" : Gosub DEBUT
+  When "BOUTON" : Gosub BOUTON
+Endcase
+
+Return
+
+$OK  
+     infbox "APRES_CRE"
+     If !clalev([F:ZSTDAH]) : Local File ZSTDAH[F:ZSTDAH] : Endif
+    [F:ZSTDAH]ZSTDID=[M:ZSTDA0]ZSTDID
+    [F:ZSTDAH]ZSTDFN=[M:ZSTDA0]ZSTDFN
+    [F:ZSTDAH]ZSTDLN=[M:ZSTDA0]ZSTDLN
+    [F:ZSTDAH]ZPHONE=[M:ZSTDA0]ZPHONE
+    Write [F:ZSTDAH]
+    infbox "write"
+
+    infbox "APRES_CRE_Course"
+    If !clalev([F:ZSTDAC]) : Local File ZSTDAC[F:ZSTDAC] : Endif
+      Local Integer J : J=0
+      For J=0 to [M:ZSTDA1]NBLIG-1
+         [F:ZSTDAC]ZSTDCID=[M:ZSTDA1]ZSTDCID(J)
+         [F:ZSTDAC]ZSTDCNM=[M:ZSTDA1]ZSTDCNM(J)
+         [F:ZSTDAC]ZSTDCD=[M:ZSTDA1]ZSTDCD(J)
+         [F:ZSTDAC]ZSTDG=[M:ZSTDA1]ZSTDG(J)
+         [F:ZSTDAC]ZSTDLIN=(J+1)*1000
+         Write [F:ZSTDAC]
+      Next J
+
+Return
+
+$DEBUT
+  infbox "LIENS"
+     If !clalev([F:ZSTDAH]) : Local File ZSTDAH[F:ZSTDAH] : Endif
+              [M:ZSTDA0]ZSTDID=[F:ZSTDAH]ZSTDID
+              [M:ZSTDA0]ZSTDFN=[F:ZSTDAH]ZSTDFN
+              [M:ZSTDA0]ZSTDLN=[F:ZSTDAH]ZSTDLN
+              [M:ZSTDA0]ZPHONE=[F:ZSTDAH]ZPHONE
+	AFFZO [M:ZSTDA0]
+
+     infbox "LIENS_Course"
+     If !clalev([F:ZSTDAC]) : Local File ZSTDAC[F:ZSTDAC] : Endif
+       Local Integer J : J=0
+       For [F:ZSTDAC]
+           [M:ZSTDA1]ZSTDCID(J)=[F:ZSTDAC]ZSTDCID
+           [M:ZSTDA1]ZSTDCNM(J)=[F:ZSTDAC]ZSTDCNM
+           [M:ZSTDA1]ZSTDCD(J)=[F:ZSTDAC]ZSTDCD
+           [M:ZSTDA1]ZSTDG(J)=[F:ZSTDAC]ZSTDG
+  J = J + 1
+  [M:ZSTDA1]NBLIG = J
+Next
+Affzo [M:ZSTDA1]
+Return
+
+$BOUTON
+  if BOUT = "C"
+      Effzo [M:ZSTDA1]
+      Affzo [M:ZSTDA1]
+  EndIf
+Return
+
+Subprog C_ZSTDCID(VALEUR)
+Variable Char    VALEUR()
+   Local Integer J : J=0
+      For J=0 to [M:ZSTDA1]NBLIG-1
+         if VALEUR = [M:ZSTDA1]ZSTDCID(J)
+           Errbox "Course ID should be unique"
+            MKSTAT = 2
+            END
+         EndIf
+      Next J
+End
+
+
+Subprog AP_ZSTDID(VALEUR)
+Variable Char    VALEUR()
+If !clalev([F:ZSTDC]) : Local File ZSTDC[F:ZSTDC] : Endif
+   Local Integer J : J=0
+    For [F:ZSTDC] Where [F:ZSTDC]ZSTDID = VALEUR 
+		infbox num$([F:ZSTDC]ZSTDCID) 
+                infbox num$([F:ZSTDC]ZSTDCNM)
+                   [M:ZSTDA1]ZSTDCID(J) =[F:ZSTDC]ZSTDCID
+                   [M:ZSTDA1]ZSTDCNM(J) =[F:ZSTDC]ZSTDCNM
+                   [M:ZSTDA1]ZSTDCD(J) =[F:ZSTDC]ZSTDCD
+                   [M:ZSTDA1]ZSTDG(J) =[F:ZSTDC]ZSTDG
+                   J = J + 1
+                   [M:ZSTDA1]NBLIG = J     
+       Next 
+Affzo [M:ZSTDA1]
+End
+
+
+
+####################################################################################
+# Program Name: ZSPESTD
+# Description : Action Types Task Completion Script on Object-Based Window Assigned by Shraddha Mam
+# Author      : GT-RB
+# Date        : 06-09-2024
+# Type        : SPE
+####################################################################################
+# 000   Original version
+####################################################################################
+####################################################################################
+## Change Log
+## Rev  Issue Number    Date    User     Description
+## ---------------------------------------------------------------------------------
+## 001    REQ0001     20240905  GT_RB    Change in script by using Before_Field, Initialisation, Before_Entry, Control, After_Field, After_Change
+
+## 002    REQ0002     20240906  GT_RB    Converting Window into real life usable interface
+####################################################################################
+
+$Action
+Case Action
+  When "APRES_CRE" : Gosub APRES_CRE
+  When "LIENS" : Gosub LIENS
+  When "APRES_MOD" : Gosub APRES_MOD
+  When "ANNULE" : Gosub ANNULE
+    When "VERIF_CRE" : GOSUB VERIF_CRE
+Endcase
+Return
+
+$VERIF_CRE
+Local Char ZSEQN(8)
+Local Integer ZNUM(8)
+Call NUMERO("ZSEQ","",date$,"",[L]ZSEQN,[L]ZNUM) From SUBANM
+[M:ZSTD0]ZSEQN = [L]ZSEQN
+Affzo [M:ZSTD0]ZSEQN 
+RETURN
+
+
+$APRES_CRE
+infbox "APRES_CRE"
+If !clalev([F:ZSTDD]) : Local File ZSTDDET[F:ZSTDD] : Endif
+Local Integer I : I=0
+For I=0 to [M:ZSTD1]NBLIG-1
+    [F:ZSTDD]ZSTDDID=[M:ZSTD0]ZSTDID
+    [F:ZSTDD]ZRMNM=[M:ZSTD1]ZRMNM(I)
+    [F:ZSTDD]ZSECTOR=[M:ZSTD1]ZSECTOR(I)
+    [F:ZSTDD]ZCITY=[M:ZSTD1]ZCITY(I)
+    [F:ZSTDD]ZADDCOD=[M:ZSTD1]ZADDCOD(I)
+    [F:ZSTDD]ZSTDLIN=(I+1)*1000
+    Write [F:ZSTDD]
+    infbox "write"
+Next I
+
+infbox "APRES_CRE_Course"
+If !clalev([F:ZSTDC]) : Local File ZSTDC[F:ZSTDC] : Endif
+Local Integer J : J=0
+For J=0 to [M:ZSTDC1]NBLIG-1
+    [F:ZSTDC]ZSTDID=[M:ZSTD0]ZSTDID
+    [F:ZSTDC]ZSTDCID=[M:ZSTDC1]ZSTDCID(J)
+    [F:ZSTDC]ZSTDCNM=[M:ZSTDC1]ZSTDCNM(J)
+    [F:ZSTDC]ZSTDCD=[M:ZSTDC1]ZSTDCD(J)
+    [F:ZSTDC]ZSTDG=[M:ZSTDC1]ZSTDG(J)
+    [F:ZSTDC]ZSTDLIN=(J+1)*1000
+    Write [F:ZSTDC]
+Next J
+Return
+
+
+$LIENS
+infbox "LIENS"
+If !clalev([F:ZSTDD]) : Local File ZSTDDET[F:ZSTDD] : Endif
+Local Integer I : I=0
+For [F:ZSTDD] where [F:ZSTDD]ZSTDDID=[M:ZSTD0]ZSTDID
+  [M:ZSTD1]ZSTDDID(I) = [F:ZSTDD]ZSTDDID
+  [M:ZSTD1]ZRMNM(I) = [F:ZSTDD]ZRMNM
+  [M:ZSTD1]ZSECTOR(I) = [F:ZSTDD]ZSECTOR
+  [M:ZSTD1]ZCITY(I) = [F:ZSTDD]ZCITY
+  [M:ZSTD1]ZADDCOD(I) = [F:ZSTDD]ZADDCOD
+  Affzo [M:ZSTD1]ZRMNM(I)
+  Affzo [M:ZSTD1]ZSECTOR(I)
+  Affzo [M:ZSTD1]ZCITY(I)
+  Affzo [M:ZSTD1]ZADDCOD(I)
+  I = I + 1
+  [M:ZSTD1]NBLIG = I
+Next
+Affzo [M:ZSTD1]
+
+infbox "LIENS_Course"
+If !clalev([F:ZSTDC]) : Local File ZSTDC[F:ZSTDC] : Endif
+Local Integer J : J=0
+[F:ZSTDC]ZSTDID = [M:ZSTD0]ZSTDID
+For [F:ZSTDC] where [F:ZSTDC]ZSTDID=[M:ZSTD0]ZSTDID
+  [M:ZSTDC1]ZSTDCID(J) = [F:ZSTDC]ZSTDCID
+  [M:ZSTDC1]ZSTDCNM(J) = [F:ZSTDC]ZSTDCNM
+  [M:ZSTDC1]ZSTDCD(J) = [F:ZSTDC]ZSTDCD
+  [M:ZSTDC1]ZSTDG(J) = [F:ZSTDC]ZSTDG
+  Affzo [M:ZSTDC1]ZSTDCID(J)
+  Affzo [M:ZSTDC1]ZSTDCNM(J)
+  Affzo [M:ZSTDC1]ZSTDCD(J)
+  Affzo [M:ZSTDC1]ZSTDG(J)
+  J = J + 1
+  [M:ZSTDC1]NBLIG = J
+Next
+Affzo [M:ZSTDC1]
+Return
+
+$APRES_MOD
+If !clalev([F:ZSTDD]) : Local File ZSTDDET[F:ZSTDD] : Endif
+Delete [F:ZSTDD] where [F:ZSTDD]ZSTDDID=[M:ZSTD0]ZSTDID 
+Local Integer I : I=0
+For I=0 to [M:ZSTD1]NBLIG-1
+    [F:ZSTDD]ZSTDDID=[M:ZSTD0]ZSTDID
+    [F:ZSTDD]ZRMNM=[M:ZSTD1]ZRMNM(I)
+    [F:ZSTDD]ZSECTOR=[M:ZSTD1]ZSECTOR(I)
+    [F:ZSTDD]ZCITY=[M:ZSTD1]ZCITY(I)
+    [F:ZSTDD]ZADDCOD=[M:ZSTD1]ZADDCOD(I)
+    [F:ZSTDD]ZSTDLIN=(I+1)*1000
+    Write [F:ZSTDD]
+    infbox "write"
+Next I
+
+If !clalev([F:ZSTDC]) : Local File ZSTDC[F:ZSTDC] : Endif
+Delete [F:ZSTDC] where [F:ZSTDC]ZSTDID=[M:ZSTD0]ZSTDID
+Local Integer J : J=0
+For J=0 to [M:ZSTDC1]NBLIG-1
+    [F:ZSTDC]ZSTDID=[M:ZSTD0]ZSTDID
+    [F:ZSTDC]ZSTDCID=[M:ZSTDC1]ZSTDCID(J)
+    [F:ZSTDC]ZSTDCNM=[M:ZSTDC1]ZSTDCNM(J)
+    [F:ZSTDC]ZSTDCD=[M:ZSTDC1]ZSTDCD(J)
+    [F:ZSTDC]ZSTDG=[M:ZSTDC1]ZSTDG(J)
+    [F:ZSTDC]ZSTDLIN=(J+1)*1000
+    Write [F:ZSTDC]
+    infbox "write"
+Next J
+Return
+
+$ANNULE 
+ If !clalev([F:ZSTDD]) : Local File ZSTDDET[F:ZSTDD] : Endif
+Delete [F:ZSTDD] where [F:ZSTDD]ZSTDDID=[M:ZSTD0]ZSTDID 
+
+ If !clalev([F:ZSTDC]) : Local File ZSTDC1[F:ZSTDC1] : Endif
+Delete [F:ZSTDC] where [F:ZSTDC]ZSTDID=[M:ZSTD0]ZSTDID
+Return
+
+
+Subprog AV_ZSTDFN(VALEUR)
+Variable Char VALEUR()
+#      infbox "Before_Field: Enter data in Field"
+End
+
+Subprog D_ZPHONE(VALEUR)
+Variable Char VALEUR()
+    VALEUR = "0000000000 Default value Initialisation"
+End
+
+Subprog AS_ZSTDLN(VALEUR)
+Variable Char VALEUR()
+      infbox "Before_Entry: Enter your last name"
+End
+
+
+#Subprog AP_ZSTDFN(VALEUR)
+#Variable Char VALEUR()
+#      infbox "After_Field: First Name Entered"
+#End
+
+
+Subprog C_ZSTDLN(VALEUR)
+Variable Char    VALEUR()
+         if [M:ZSTD0]ZSTDFN = VALEUR
+                Errbox "FirstName and LastName cannot be same"
+                MKSTAT = 2
+                END
+         EndIf
+        AFFZO [M:ZSTD0]ZSTDLN
+        if VALEUR = "Raz"
+          infbox "Raz: Deletes a screen field value"
+          Raz [M:ZSTD0]ZSTDLN
+        EndIf
+End
+
+
+Subprog AP_ZPHONE(VALEUR)
+Variable Char VALEUR()
+      if len(VALEUR) <> 10
+           Errbox "Phone no. must be of 10 digit"
+           MKSTAT = 2
+           END
+      EndIf
+      [M:ZSTDG1]ZSTDPHONE = VALEUR
+      AFFZO [M:ZSTDG1]ZSTDPHONE
+      Local Char ZSTORE
+      Local Integer ZNUM
+      for I = 1 to len(VALEUR)
+           [L] ZSTORE = mid$(VALEUR, I, 1)
+          If [L]ZSTORE < "0" Or [L]ZSTORE > "9"
+              Errbox "Invalid input"
+              MKSTAT = 2
+              END
+           Endif
+      Next I
+      AFFZO [M:ZSTD0]ZPHONE
+End
+End
+
+
+Subprog AM_ZSTDEM(VALEUR)
+Variable Char VALEUR()
+      Local Char ZSTORE
+      Local Integer ZFLAG, ZFLAGU, ZFLAGL
+      for I = 1 to len(VALEUR)
+         [L] ZSTORE = mid$(VALEUR, I, 1)
+          if  [L]ZSTORE = "@" 
+              [L]ZFLAG = 1
+          EndIf
+      Next I
+     if [L]ZFLAG = 0
+          Errbox "Email must contain @"
+     EndIf
+    for I = 1 to len(VALEUR)
+         [L] ZSTORE = mid$(VALEUR, I, 1)
+        if [L]ZSTORE <> "@"
+            if [L]ZSTORE = toupper([L]ZSTORE)
+                    [L]ZFLAGU = 1
+            EndIf
+            if [L]ZSTORE = tolower([L]ZSTORE)
+                   [L]ZFLAGL = 1
+            EndIf
+        EndIf
+    Next I
+    if [L]ZFLAGU = 0
+        Errbox "One uppercase must be there"
+    EndIF
+    if [L]ZFLAGL = 0
+        Errbox "One lowercase must be there"
+    EndIF
+End
+
+Subprog AP_ZSTDFN(VALEUR)
+Variable Char VALEUR()
+      Local Char ZSTORE
+      for I = 1 to len(VALEUR)
+           [L] ZSTORE = mid$(VALEUR, I, 1)
+           If ([L]ZSTORE < "A" | [L]ZSTORE > "Z") & ([L]ZSTORE < "a" | [L]ZSTORE > "z") 
+              Errbox "Invalid input"
+              MKSTAT = 2
+              END
+           Endif
+      Next I
+      if VALEUR = ""
+           Errbox "Name cannot be blank"
+           MKSTAT = 2
+           END
+      EndIf
+End
+
+Subprog AP_ZSTDLN(VALEUR)
+Variable Char VALEUR()
+      Local Char ZSTORE
+      for I = 1 to len(VALEUR)
+           [L] ZSTORE = mid$(VALEUR, I, 1)
+           If ([L]ZSTORE < "A" | [L]ZSTORE > "Z") & ([L]ZSTORE < "a" | [L]ZSTORE > "z") 
+              Errbox "Invalid input"
+              MKSTAT = 2
+              END
+           Endif
+      Next I
+      AFFZO [M:ZSTD0]ZSTDLN 
+End
+
+Subprog AP_ZSTDID(VALEUR)
+Variable Char VALEUR()
+      If VALEUR = ""
+           Errbox "Id must be there"
+           MKSTAT = 2
+           END
+      EndIf 
+      AFFZO [M:ZSTD0]ZSTDID
+End
+
+Subprog IB_NBLIG
+    infbox "Enter Address details"
+    #You can pass default values as well
+End
+
+Subprog S_ZSTDG(VALEUR)
+Variable Integer VALEUR
+    if VALEUR = 1
+        infbox "Gender : Male"
+    Else 
+        infbox "Gender : Female"
+    EndIf
+End
+
+
+Subprog B1_NBLIG
+    infbox "Botton action triggered"	
+End
+
+Subprog B2_ZSTDGID(VALEUR)
+Variable Char    VALEUR()
+    VALEUR = 20
+    infbox "Default ID: 20"
+End
+
+
+Subprog AVANT_NBLIG
+      infbox "Enter Course Details"
+End
+
+
+Subprog APRES_NBLIG
+       infbox "Course Details submitted"
+End
+
+Subprog C_ZSTDDID(VALEUR)
+Variable Char    VALEUR()
+      if VALEUR <> [M:ZSTD0]ZSTDID
+         ErrBox "Student ID must be same"
+         MKSTAT = 2
+         END
+     EndIF
+End
+
+Subprog C_ZCITY(VALEUR)
+Variable Char    VALEUR()
+    Local Char ZCHAR
+    for I = 1 to len(VALEUR)
+    [L] ZCHAR = mid$(VALEUR, I, 1)
+      if ([L]ZCHAR < "a" | [L]ZCHAR > "z") & ([L]ZCHAR < "A" | [L]ZCHAR > "Z")
+          ErrBox "Invalid Input"
+          MKSTAT = 2
+         END
+      EndIf
+   Next I
+End
+
+
+
+
+Subprog C_ZSTDGNM(VALEUR)
+Variable Char    VALEUR()
+          Local Char ZCHAR
+         for I = 1 to len(VALEUR)
+            [L]ZCHAR = mid$(VALEUR, I, 1)
+             if ([L]ZCHAR < "a" | [L]ZCHAR > "z") & ([L]ZCHAR < "A" | [L]ZCHAR > "Z")
+               ErrBox "Invalid Input"
+               MKSTAT = 2
+               END
+             EndIf     
+         Next I
+End
+
+
+Subprog C_ZSTDPHONE(VALEUR)
+Variable Char    VALEUR()
+       Local Char ZCHAR
+         for I = 1 to len(VALEUR)
+           [L] ZCHAR = mid$(VALEUR, I, 1)
+           if [L]ZCHAR<"0" | [L]ZCHAR>"9" | len(VALEUR) <> 10
+              ErrBox "Invalid Input"
+              MKSTAT = 2
+              End
+           EndIf 
+         NEXT I 
+End
+
+
+Subprog AS_ZADDCOD(VALEUR)
+Variable Char    VALEUR()
+       VALEUR = "Room No. "+num$(ZRMNM(nolign-1)) +", Sector-"+num$(ZSECTOR(nolign-1))+", "+ZCITY(nolign-1)
+End
+
+
+Subprog AS_ZSTDGAGE(VALEUR)
+Variable Decimal VALEUR
+         #infbox num$((year(date$)) - (year(ZSTDGDOB)))
+         VALEUR = num$((year(date$)) - (year(ZSTDGDOB)))
+         AFFZO [M:ZSTDG1] ZSTDGAGE
+End
+
+Subprog CL_ZICON(VALEUR)
+Variable Char    VALEUR()
+      infbox "Click action performed"
+      Callui RETOUR="" With "UIAction="+chr$(1)+"OpenFile", "UILocalDir="+chr$(1)+"HTTPS", "UILocalFile="+chr$(1)+"GOOGLE.COM"
+End
+
+
+
+
+Subprog CL_YTEST(VALEUR)
+Variable Char    VALEUR()
+     infbox "Click action performed"
+    Callui RETOUR="" With "UIAction="+chr$(1)+"OpenFile", "UILocalDir="+chr$(1)+"HTTPS", "UILocalFile="+chr$(1)+"GOOGLE.COM"
+End
+
+
+
+Subprog C_ZSTDFN(VALEUR)
+Variable Char    VALEUR()
+      if VALEUR = "Rutwik"
+         [M:ZSTD0] ZSTDFN = "Rut"
+         infbox "Name changed Rut to Rutwik"
+         Grizo [M:ZSTD0] ZSTDFN
+         infbox "Grizo: Completely disables a screen field"
+      EndIf
+       if VALEUR = "Affzo"
+          infbox "Affzo Refreshes a screen field"
+          Affzo [M:ZSTD0]ZPhone
+        EndIf
+End
+
+

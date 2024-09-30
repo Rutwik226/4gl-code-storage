@@ -1,0 +1,43 @@
+####################################################################################
+# Program Name: ZSPEMATHFUN
+# Description : Sorting an Array Script for task assigned in Sage X3 functional training session
+# Author      : GT-0855 // GT-RB
+# Date        : 29-08-2024
+# Type        : SPE
+####################################################################################
+# 000   Original version
+####################################################################################
+
+Gosub SORT_ARRAY
+END
+
+$SORT_ARRAY
+Local integer ZARRAY(8), ZTEMP
+[L] ZARRAY(0) = 10
+[L] ZARRAY(1) = 20
+[L] ZARRAY(2) = 50
+[L] ZARRAY(3) = 25
+[L] ZARRAY(4) = 12
+
+for I = 0 to 4 
+       for J = I+1 to 4
+                if ZARRAY(I) > ZARRAY(J)
+                    ZTEMP = ZARRAY(I)
+                    ZARRAY(I) = ZARRAY(J)
+                    ZARRAY(J) = ZTEMP 
+                EndIF
+       NEXT J
+NEXT I
+
+For I = 0 to 4
+      infbox num$(ZARRAY(I))
+NEXT I
+Return
+
+
+
+
+
+
+
+

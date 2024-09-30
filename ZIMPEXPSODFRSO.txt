@@ -1,0 +1,131 @@
+
+#####################################################################################
+#Program Name: ZIMPEXPSODFRSO
+#Description : Import and Export Sales Delivery from Sales Order
+#Author      : GT-RB
+#Date        : 09/23/2024
+#####################################################################################
+
+
+
+Call OUVRE_TRACE ("User Created Log File") From LECFIC
+Call ZSODC("SONNA0110107")
+If dim(SOH) > 0
+	kill SOH
+Endif
+Call FERME_TRACE From LECFIC 
+Call LEC_TRACE() From LECFIC
+END
+
+Subprog ZSODC(SOHNUM)
+Local Char ZSDHNUM : ZSDHNUM = ""  #Sales delivery no. will be auto-created 
+  Local char ZSALFCY 
+  Local char ZSTOFCY 
+  #Sales Delivery No.                                             
+  Local char ZBPCORD 
+  Local char ZBPAADD
+  Local char ZCUR    
+  Local date ZSHIDAT  
+  Local date ZDLVDAT
+  Local integer ZCFMFLG
+  Local char ZPJT
+  Local integer ZSOPLIN(50)(0..)
+  Local char ZITMREF(50)(0..)
+  Local Char ZITMDES(50)(0..) 
+  Local char ZSAU(50)(0..) 
+  Local integer ZQTY(50)(0..) 
+
+
+Local Char ZSOHNUM : ZSOHNUM = SOHNUM                                           #SOHNUM is required in Table2
+If !clalev([F:SOH]) : Local File SORDER[F:SOH] : Endif   #Data fetched from Table1
+Local Integer J : J=0
+For [F:SOH] Where [F:SOH]SOHNUM=ZSOHNUM
+  #Header fields from Table 1(SORDER(SOH))
+  ZSALFCY = [F:SOH]SALFCY
+  ZSTOFCY = [F:SOH]STOFCY
+  #Sales Delivery No.                                             
+  ZBPCORD = [F:SOH]BPCORD
+  ZBPAADD = [F:SOH]BPAADD
+  ZCUR    = [F:SOH]CUR
+  ZSHIDAT = [F:SOH]SHIDAT
+  ZDLVDAT = [F:SOH]DEMDLVDAT  #Expected delivery date
+  ZCFMFLG = [F:SOH]ADRVAL
+  ZPJT = [F:SOH]PJT
+Next
+
+If !clalev([F:SOP]) : Local File SORDERP[F:SOP] : Endif   #Data fetched from Table1
+Local Integer J : J=0
+For [F:SOP] Where [F:SOP]SOHNUM=ZSOHNUM
+  #Details fields from Table 2(SORDERP(SOP))
+  #Sales order no. already declared
+   ZSOPLIN(J) = [F:SOP]SOPLIN
+   ZITMREF(J) = [F:SOP]ITMREF
+   ZITMDES(J) = [F:SOP]ITMDES
+   ZSAU(J) = [F:SOP]SAU
+   J += 1
+Next
+
+If !clalev([F:SOQ]) : Local File SORDERQ[F:SOQ] : Endif   #Data fetched from Table1
+Local Integer K : K=0
+For [F:SOQ] Where [F:SOQ]SOHNUM=ZSOHNUM
+   ZQTY(K) = [F:SOQ]QTY
+   K += 1
+Next
+
+
+ LOCAL INTEGER STAT
+ Local Char PATH1(150)
+ Local Char PATH2(150)
+ Local Char URL
+	
+ Call SET_FICNAM(PATH1,PATH2,URL) From ORDSYS
+# infbox PATH2
+ If !clalev([F:SDH]) : Local File SDELIVERY[F:SDH] : Endif
+	 Openo PATH2 Using [YPIM]
+		 adxifs = ";" : adxirs = chr$(13) + chr$(10)    ##FS= FIELD SEPERATOR, RS=ROW SEPERATOR
+		 Local Char HEADER(200)
+		 Local Char DETAIL(200)
+ #INFBOX "BEFORE HEADER"
+	####HEADER#####
+		 HEADER = "H"
+		 HEADER += ";"+ZSALFCY              
+		 HEADER += ";"+ZSTOFCY            
+		 HEADER += ";"+ZSDHNUM 		
+		 HEADER += ";"+ZBPCORD              
+                 HEADER += ";"+ZBPAADD              
+		 HEADER += ";"+ZCUR                   
+         HEADER += ";"+num$(ZSHIDAT)
+         HEADER += ";"+num$(ZDLVDAT)            		
+		HEADER += ";"+num$(ZCFMFLG)
+         HEADER += ";"+ZPJT                     
+		 HEADER += ";"+""               			 ##Header text
+		 HEADER += ";"+""               			 ##Header text
+		 HEADER += ";"+""               			 ##Footer text
+		 HEADER += ";"+""               			 ##Footer text
+		 Wrseq HEADER Using [YPIM]
+	####HEADER#####
+ Call ECR_TRACE (HEADER,0) From GESECRAN
+	####DETAIL#####
+      For I = 0 to (J-1)
+	 #INFBOX "BEFORE DETAILS"
+			 DETAIL = "L"
+		     DETAIL += ";"+ZSOHNUM                
+                     DETAIL += ";"+num$(ZSOPLIN(I))
+			 DETAIL += ";"+ZITMREF(I)
+                         DETAIL += ";"+ZITMDES(I) 
+			 DETAIL += ";"+ZSAU(I)             
+                 	 DETAIL += ";"+NUM$(ZQTY(I))    
+			 DETAIL += ";"+""                                ##Line text
+			 DETAIL += ";"+""                                ##Line text
+			 Wrseq DETAIL Using [YPIM]                           ## Is used to write the data to the files
+      Next
+	 Openo Using [YPIM]                                         ##is used to open and close a file
+	####DETAIL#####
+	
+	#call COPCLI(PATH2,PATH2,STAT) from ORDSYS              ##is used to download the file
+         Call IMPORTSIL("ZSDH", PATH2) From GIMPOBJ              ##is used to import the file
+END
+
+
+
+

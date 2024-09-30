@@ -1,0 +1,66 @@
+$Action
+Case Action
+  When "APRES_CRE" : Gosub APRES_CRE
+  When "APRES_MOD" : Gosub APRES_MOD
+  When "LIENS" : Gosub LIENS
+Endcase
+Return
+
+$APRES_CRE
+If !clalev([F:ZDET]) : Local File ZORDERDET[F:ZDET] : Endif
+Local Integer I:I=0
+For I=0 to [M:ZORD1]ZNBLIG-1
+  Filter [F:ZDET] where [F:ZDET]ZORDNUM=[M:ZORD0]ZORDNUM AND [F:ZDET]ZLINENUM=(I+1)
+  Read [F:ZDET]ZDET0 first
+  If !fstat
+    [F:ZDET]ZORDNUM=[M:ZORD0]ZORDNUM
+    [F:ZDET]ZPRODUCT=[M:ZORD1]ZPRODUCT(I)
+    [F:ZDET]ZQTY=[M:ZORD1]ZQTY(I)
+    [F:ZDET]ZLINENUM=I+1
+    Rewrite [F:ZDET]
+  Else
+    [F:ZDET]ZORDNUM=[M:ZORD0]ZORDNUM
+    [F:ZDET]ZPRODUCT=[M:ZORD1]ZPRODUCT(I)
+    [F:ZDET]ZQTY=[M:ZORD1]ZQTY(I)
+    [F:ZDET]ZLINENUM=I+1
+    Write [F:ZDET]
+  Endif
+Next I
+Return
+
+$LIENS
+If !clalev([F:ZDET]) : Local File ZORDERDET[F:ZDET] : Endif
+Local integer I : I=0
+For [F:ZDET] where [F:ZDET]ZORDNUM=[M:ZORD0]ZORDNUM
+  [M:ZORD1]ZPRODUCT(I) = [F:ZDET]ZPRODUCT
+  [M:ZORD1]ZQTY(I) = [F:ZDET]ZQTY
+  Affzo [M:ZORD1]ZPRODUCT(I)
+  Affzo [M:ZORD1]ZQTY(I)
+  I=I+1
+  [M:ZORD1]ZNBLIG=I
+Next
+##[M:ZORD1]ZNBLIG=I
+Affzo [M:ZORD1]
+Return
+
+$APRES_MOD
+If !clalev([F:ZDET]) : Local File ZORDERDET[F:ZDET] : Endif
+For I=0 to [M:ZORD1]ZNBLIG-1
+  Filter [F:ZDET] where [F:ZDET]ZORDNUM=[M:ZORD0]ZORDNUM AND [F:ZDET]ZLINENUM=(I+1)
+  Read [F:ZDET]ZDET0 first
+  If !fstat
+    [F:ZDET]ZORDNUM=[M:ZORD0]ZORDNUM
+    [F:ZDET]ZPRODUCT=[M:ZORD1]ZPRODUCT(I)
+    [F:ZDET]ZQTY=[M:ZORD1]ZQTY(I)
+    [F:ZDET]ZLINENUM=I+1
+    Rewrite [F:ZDET]
+  Else
+    [F:ZDET]ZORDNUM=[M:ZORD0]ZORDNUM
+    [F:ZDET]ZPRODUCT=[M:ZORD1]ZPRODUCT(I)
+    [F:ZDET]ZQTY=[M:ZORD1]ZQTY(I)
+    [F:ZDET]ZLINENUM=I+1
+    Write [F:ZDET]
+  Endif
+Next I
+Return
+

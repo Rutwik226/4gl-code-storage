@@ -1,0 +1,93 @@
+######################################################################################
+# Program Name  : ZIMPMFG
+# Description   : Create work Order/ Update work Order by increasing Planned quantity
+# Author        : GT_SAG
+# Created Date  : 20/08/2024
+# Type          : SPE
+####################################################################################
+####################################################################################
+# 000   Original version
+####################################################################################
+####################################################################################
+## Rev  Issue Number   Date        User     Description
+## ---------------------------------------------------------------------------------
+## 001                 20/08/2024  GT_SAG   Performing lock and Unlock on record while performing any modification
+#################################################################################################################
+Call ZIMPMFG('WOZA0120203')
+End
+
+Subprog ZIMPMFG( YMFGNUM)
+	Value Char YMFGNUM  
+  Local Char ZMFGNUM : ZMFGNUM = YMFGNUM #''
+  Local Char HEADER(250)                                                                           # Variable to store Details
+  Local Integer STAT                                                                               # Variable to check STAT
+  Local Char ZDATE                                                                                 # Variable to do modifications with date datatype
+	Local Char PATH1(150)                                                                            # Variable to store directory
+	Local Char PATH2(150)                                                                            # Variable to store file name
+	Local Char URL(255)                                                                              # Variable to store complete root path
+
+  SYMBOLE = "MFG"+YMFGNUM                                                                          # Create SYMBOLE using object and record no       ## 001
+  Lock = SYMBOLE With lockwait = 0                                                                 # Locking the SYMBOLE                             ## 001
+  If fstat = 1                                                                                     # check if record is locked or not                ## 001
+    errbox mess(10,100,1)                                                                          # If record is locked error message pops ip       ## 001
+  Else
+    Call SET_FICNAM(PATH1,PATH2,URL) From ORDSYS                                                   # Call SET_FICNAM Subprog to assign passed Variables values
+    Openo PATH2 Using [YPIM]                                                                       # Open file with [YPIM] abbrevation
+    #adxifs = ";" 
+    adxirs = chr$(13) + chr$(10)                                                                   # Row separator between lines
+    If !clalev([F:ZMFI]) : Local File MFGITM[F:ZMFI] : EndIf                                       # Open MFGITM table with [ZMFI] abbrevation
+    For [F:ZMFI] Where [F:ZMFI]MFGNUM = YMFGNUM                                                    # Filter records with for loop
+      If ZMFGNUM = ''                                                                              # check if ZMFGNUM is blank
+        HEADER  =  '"' + [F:ZMFI]MFGFCY + '",'                                                     # Production site
+        HEADER +=  num$([F:ZMFI]BOMALT ) + ','                                                     # BOM code
+        HEADER +=  '"' + [F:ZMFI]ITMREF + '",'                                                     # Product code
+        ZDATE   =  [F:ZMFI]STRDAT                                                                  # Start date
+        ZDATE   =  seg$(ZDATE, 7,8) + seg$(ZDATE, 5,6) + seg$(ZDATE, 3,4)                          # Adjusting Start date as per template
+        HEADER +=  ZDATE + ','                                                                     # Adding modfied Start date 
+        ZDATE   =  [F:ZMFI]ENDDAT                                                                  # End date
+        ZDATE   =  seg$(ZDATE, 7,8) + seg$(ZDATE, 5,6) + seg$(ZDATE, 3,4)                          # Adjusting End date as per template
+        HEADER +=  ZDATE + ','                                                                     # Adding modfied End date 
+        If !clalev([F:ZMFG]) : Local File MFGHEAD[F:ZMFG] : EndIf                                  # Open MFGHEAD table with [ZMFG] abbrevation
+        Read [F:ZMFG] MFG0 = YMFGNUM                                                               # Read using index MFG0 which takes MFGNUM as input
+        If !fstat                                                                                  
+          HEADER +=  num$([F:ZMFI]EXTQTY ) + ','                                                   # Planned quantity
+          HEADER += '"' + ZMFGNUM + '",'                                                           # MFGNUM
+          HEADER += '"' + [F:ZMFG]ROUNUM + '",'                                                    # Routing
+          HEADER += '"' + num$([F:ZMFG]ROUALT) + '",'                                              # Code 
+          HEADER += '"C","1"'                                                                      # C for creation , 1 for status
+        EndIf                                                                                      
+      Else                                                                                         # if ZMFGNUM is not blank
+        HEADER  =  '"' + [F:ZMFI]MFGFCY + '",'                                                     # Production site
+        HEADER +=  num$([F:ZMFI]BOMALT ) + ','                                                     # BOM code
+        HEADER +=  '"' + [F:ZMFI]ITMREF + '",'                                                     # Product code
+        ZDATE   =  [F:ZMFI]STRDAT                                                                  # Start date
+        ZDATE   =  seg$(ZDATE, 7,8) + seg$(ZDATE, 5,6) + seg$(ZDATE, 3,4)                          # Adjusting Start date as per template
+        HEADER +=  ZDATE + ','                                                                     # Adding modfied Start date 
+        ZDATE   =  [F:ZMFI]ENDDAT                                                                  # End date
+        ZDATE   =  seg$(ZDATE, 7,8) + seg$(ZDATE, 5,6) + seg$(ZDATE, 3,4)                          # Adjusting End date as per template
+        HEADER +=  ZDATE + ','                                                                     # Adding modfied End date 
+        If !clalev([F:ZMFG]) : Local File MFGHEAD[F:ZMFG] : EndIf                                  # Open MFGHEAD table with [ZMFG] abbrevation
+        Read [F:ZMFG] MFG0 = YMFGNUM                                                               # Read using index MFG0 which takes MFGNUM as input
+        If !fstat                                                                                  
+          HEADER +=  num$([F:ZMFI]EXTQTY + 1 ) + ','                                               # Update i.e increase quantity by 1
+          HEADER += '"' + ZMFGNUM + '",'                                                           # MFGNUM
+          HEADER += '"' + [F:ZMFG]ROUNUM + '",'                                                    # Routing
+          HEADER += '"' + num$([F:ZMFG]ROUALT) + '",'                                              # Code 
+          HEADER += '"M",'                                                                         # M for modification
+          HEADER += '"' + num$([F:ZMFG]MFGSTA) + '"'                                               # Order status
+        EndIf                                                                                      
+      EndIf                                                                                        
+      Wrseq HEADER Using [YPIM]                                                                    # Write HEADER in the file opened with abbrevation [YPIM]
+      HEADER = ''                                                                                  # Assign blank value to HEADER to keep updating
+    Next                                                                                           
+    
+    Openo Using [YPIM]                                                                             # Close file with abbrevation [YPIM] 
+    infbox 'wait'
+    Call IMPORTSIL("ZMFG", PATH2) From GIMPOBJ                                                     # Import the file in ZMFG template
+  Endif 
+  
+	Unlock=SYMBOLE                                                                                   # Finally unlock the record.                      ## 001
+
+End
+ 
+

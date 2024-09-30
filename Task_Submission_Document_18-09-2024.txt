@@ -1,0 +1,119 @@
+####################################################################################
+# Program Name: SPESOH
+# Description : Task Completion Script on Sales Order Standard Window Assigned by Shraddha Mam
+# Author      : GT-RB
+# Date        : 18-09-2024
+# Type        : SPE
+####################################################################################
+# 000   Original version
+####################################################################################
+####################################################################################
+## Change Log
+## Rev  Issue Number    Date    User     Description
+## ---------------------------------------------------------------------------------
+## 001    REQ0001     20240918  GT_SK    Section added (screen ZSOH5) 09/18/2024 
+####################################################################################
+
+$action
+CASE ACTION
+   When "VERIF_CRE" : Gosub VERIF_CRE
+   When "APRES_CRE" : Gosub APRES_CRE
+   When "VERIF_MOD" : Gosub VERIF_MOD
+   When "LIENS" : Gosub LIENS
+ENDCASE
+return
+
+Subprog APRES_NBLIG
+  [M:SOH4]ZSOEDTT(nolign-1) = [M:SOH0]ZSOEDT
+  AFFZO [M:SOH4]ZSOEDTT
+End
+
+$VERIF_CRE                                                                             ##001.s
+Local Integer ZSUM
+For I = 0 to [M:ZSOH5]NBLIG-1 
+   [L]ZSUM = ZSUM + [M:ZSOH5]ZSOCS(I) 
+Next
+if ZSUM <> 100
+   infbox mess(1, 6207, 1) 
+   OK = 0
+   FIN = 0
+   GPE = 1
+   EndIf
+Return
+
+$APRES_CRE
+If !clalev([F:ZSOC]) : Local File ZSOC[F:ZSOC] : Endif
+   Local Integer J : J=0
+For J=0 to [M:ZSOH5]NBLIG-1
+   [F:ZSOC]ZSOHNUM=[M:SOH0]SOHNUM
+   [F:ZSOC]ZSOCR=[M:ZSOH5]ZSOCR(J)
+   [F:ZSOC]ZSOCN=[M:ZSOH5]ZSOCN(J)
+   [F:ZSOC]ZSOCS=[M:ZSOH5]ZSOCS(J)
+   [F:ZSOC]ZSOHLIN=(J+1)*1000
+   Write [F:ZSOC]
+Next J
+Return
+
+$LIENS
+If !clalev([F:ZSOC]) : Local File ZSOC[F:ZSOC] : Endif
+   Local Integer J : J=0
+For [F:ZSOC] where [F:ZSOC]ZSOHNUM = [M:SOH0]SOHNUM
+   [M:ZSOH5]ZSOCR(J) = [F:ZSOC]ZSOCR
+   [M:ZSOH5]ZSOCN(J) = [F:ZSOC]ZSOCN
+   [M:ZSOH5]ZSOCS(J) = [F:ZSOC]ZSOCS
+   J = J + 1
+   [M:ZSOH5]NBLIG = J
+Next
+Affzo [M:ZSOH5]
+Return
+
+$VERIF_MOD
+Local Integer ZSUM
+For I = 0 to [M:ZSOH5]NBLIG-1 
+    [L]ZSUM = ZSUM + [M:ZSOH5]ZSOCS(I) 
+Next
+if ZSUM <> 100
+   infbox mess(1, 6207, 1)    
+   OK = 0
+   FIN = 0
+   GPE = 1
+Else
+If !clalev([F:ZSOC]) : Local File ZSOC[F:ZSOC] : Endif
+   Delete [F:ZSOC] where [F:ZSOC]ZSOHNUM=[M:SOH0]SOHNUM
+   Local Integer J : J=0
+For J=0 to [M:ZSOH5]NBLIG-1
+   [F:ZSOC]ZSOHNUM=[M:SOH0]SOHNUM
+   [F:ZSOC]ZSOCR=[M:ZSOH5]ZSOCR(J)
+   [F:ZSOC]ZSOCN=[M:ZSOH5]ZSOCN(J)
+   [F:ZSOC]ZSOCS=[M:ZSOH5]ZSOCS(J)
+   [F:ZSOC]ZSOHLIN=(J+1)*1000
+   Write [F:ZSOC]
+   Next J
+EndIf
+Return
+
+Subprog S_ZSOCR(VALEUR)                                                                
+Variable Char    VALEUR()
+End
+
+
+Subprog AS_ZSOCN(VALEUR)
+Variable Char    VALEUR()
+If !clalev([F:REP]) : Local File SALESREP[F:REP] : Endif
+For [F:REP] where [F:REP]REPNUM = [M:ZSOH5]ZSOCR(nolign-1) 
+          VALEUR = [F:REP]REPNAM
+Next
+Affzo [M:ZSOH5]ZSOCN
+End
+
+
+Subprog C_ZSOCS(VALEUR)
+Variable Decimal VALEUR
+if VALEUR < 0 | VALEUR > 100
+     MKSTAT = 2
+     End
+EndIf
+END                                                                                     ##001.e                                                                                                                                                           
+
+
+

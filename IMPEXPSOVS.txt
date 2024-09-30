@@ -1,0 +1,108 @@
+######################################################################################
+# Program Name: YXPSOH
+# Description : Import and Export Sales Order  
+# Author      : GT-VS
+# Date        : 09/20/2024
+######################################################################################
+##HEADER##
+Local char YSALFCY : YSALFCY = "FR011"
+Local char YSOHTYP : YSOHTYP = "WEB"
+Local char YSOHNUM : YSOHNUM = "SOWFR0110008"
+Local char YBPCODD : YBPCODD = "FR004"
+Local date YORDDAT : YORDDAT  = date$
+Local char YCUSORDREF : YCUSORDREF = "test"
+Local char YSTOFCY : YSTOFCY = "FR011"
+Local char YCUR : YCUR = "EUR"
+Local char YPJT : YPJT = ""
+
+##DETAIL##
+Local char YITMREF(50)   :	YITMREF = "DIS009"
+Local Char YITMDES(50)   :	YITMDES = "Ecran 22 standard 16/10"
+Local char YSAU(50)      :	YSAU = "UN"
+Local integer YQTY       :	YQTY = 1
+Local integer YGROPRI    :	YGROPRI = 220
+Local integer YDISCRGVAL1:	YDISCRGVAL1 = 0
+Local integer YDISCRGVAL2:	YDISCRGVAL2 = 0
+Local integer YDISCRGVAL3:	YDISCRGVAL3 = 0
+
+Call YXPSOH(YSALFCY, YSOHTYP, YSOHNUM, YBPCODD, YORDDAT, YCUSORDREF, YSTOFCY, YCUR, YPJT, YITMREF, YITMDES, YSAU, YQTY, YGROPRI, YDISCRGVAL1, YDISCRGVAL2, YDISCRGVAL3)
+
+END
+
+Subprog YXPSOH(YSALFCY, YSOHTYP, YSOHNUM, YBPCODD, YORDDAT, YCUSORDREF, YSTOFCY, YCUR, YPJT,  YITMREF, YITMDES, YSAU, YQTY, YGROPRI, YDISCRGVAL1, YDISCRGVAL2, YDISCRGVAL3)
+	Value char YSALFCY 
+	Value char YSOHTYP 
+	Value char YSOHNUM 
+	Value char YBPCODD 
+	Value date YORDDAT 
+    Value char YCUSORDREF 
+	Value char YSTOFCY 
+	Value char YCUR 
+	Value char YPJT 
+
+	Value char YITMREF()
+	Value Char YITMDES()
+	Value char YSAU()
+	Value integer YQTY
+	Value integer YGROPRI
+	Value integer YDISCRGVAL1
+	Value integer YDISCRGVAL2
+	Value integer YDISCRGVAL3
+	
+	
+	LOCAL INTEGER STAT
+	Local Char PATH1(150)
+	Local Char PATH2(150)
+	Local Char URL
+	
+	Call SET_FICNAM(PATH1,PATH2,URL) From ORDSYS
+infbox PATH2
+If !clalev([F:YSOH]) : Local File SORDER[F:YSOH] : Endif
+	Openo PATH2 Using [YPIM]
+		adxifs = ";" : adxirs = chr$(13) + chr$(10)    ##FS= FIELD SEPERATOR, RS=ROW SEPERATOR
+		Local Char HEADER(200)
+		Local Char DETAIL(200)
+INFBOX "BEFORE HEADER"
+	#####HEADER#####
+		HEADER = "E"
+		HEADER += ";"+YSALFCY                    ##[F:YSOH]SALFCY           ##sales site
+		HEADER += ";"+YSOHTYP                    ##[F:YSOH]YSOHTYP          ##Invoice Type
+		HEADER += ";"+YSOHNUM 					 ##Order number
+		HEADER += ";"+YBPCODD                    ##[F:YSOH]BPSNUM           ##Bill-to-Customer
+        HEADER += ";"+YORDDAT             		 ##[F:YSOH]YDATEDAT         ##Order Date
+		HEADER += ";"+YCUSORDREF                 ##[F:YSOH]CUSORDREF        ##Customer order reference 
+		HEADER += ";"+YSTOFCY                    ##[F:YSOH]YSTOFCY          ##Stock-Site
+		HEADER += ";"+YCUR                       ##[F:YSOH]CUR              ##Currency
+        HEADER += ";"+YPJT                       ##[F:YSOH]PJT              ##PROJECT
+		HEADER += ";"+""               			 ##Header text
+		HEADER += ";"+""               			 ##Header text
+		HEADER += ";"+""               			 ##Footer text
+		HEADER += ";"+""               			 ##Footer text
+		Wrseq HEADER Using [YPIM]                             ## Is used to write the data to the files    
+	#####HEADER#####
+	 
+	#####DETAIL#####
+	INFBOX "BEFORE DETAILS"
+			DETAIL = "L"
+			DETAIL += ";"+YITMREF                    ##[F:YSOH]ITMREF                     ##Product
+			DETAIL += ";"+YITMDES                    ##[F:YSOH]ITMDES                     ##Description
+			DETAIL += ";"+num$(YSAU)                 ##[F:YSOH]SAU                        ##Sales unit
+            DETAIL += ";"+NUM$(YQTY)                 ##[F:YSOH]QTY                        ##Ordered Quantity
+			DETAIL += ";"+NUM$(YGROPRI)              ##[F:YSOH]GROPRI                     ##Gross price
+			DETAIL += ";"+NUM$(YDISCRGVAL1)      	 ##Discount/charge 1
+			DETAIL += ";"+NUM$(YDISCRGVAL2)      	 ##Discount/charge 2
+			DETAIL += ";"+NUM$(YDISCRGVAL3)      	 ##Discount/charge 3
+			DETAIL += ";"+""                                ##Line text
+			DETAIL += ";"+""                                ##Line text
+			Wrseq DETAIL Using [YPIM]                           ## Is used to write the data to the files
+	Openo Using [YPIM]                                         ##is used to open and close a file
+	#####DETAIL#####
+	
+	call COPCLI(PATH2,PATH2,STAT) from ORDSYS              ##is used to download the file
+	#Call IMPORTSIL("ZSOH", PATH2) From GIMPOBJ              ##is used to import the file
+
+END
+
+
+
+

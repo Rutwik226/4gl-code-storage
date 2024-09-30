@@ -1,0 +1,477 @@
+####################################################################################
+# Program Name: ZSPESTD
+# Description : Action Types Task Completion Script on Object-Based Window Assigned by Shraddha Mam
+# Author      : GT-RB
+# Date        : 19-09-2024
+# Type        : SPE
+####################################################################################
+# 000   Original version
+####################################################################################
+####################################################################################
+## Change Log
+## Rev  Issue Number    Date    User     Description
+## ---------------------------------------------------------------------------------
+## 001    REQ0001     20240905  GT_RB    Change in script by using Before_Field, Initialisation, Before_Entry, Control, After_Field, After_Change
+
+## 002    REQ0002     20240906  GT_RB    Converting Window into real life usable interface
+
+## 003    REQ0003     20240919  GT_RB    Added import and Export functionality in system
+
+## 004    REQ0004     20240919  GT_RB    Added Timeout subprograms with Question and YES/NO box
+####################################################################################
+
+$ACTION
+#infbox action
+Case ACTION
+  When "APRES_CRE" : Gosub APRES_CRE
+  When "LIENS" : Gosub LIENS
+  When "APRES_MOD" : Gosub APRES_MOD
+  When "ANNULE" : Gosub ANNULE
+  When "VERIF_CRE" : Gosub VERIF_CRE
+  When "SETBOUT" : Gosub SETBOUT
+Endcase
+Return
+
+$VERIF_CRE
+Local Char ZSEQN(8)
+Local Integer ZNUM(8)
+Call NUMERO("ZSEQ","",date$,"",[L]ZSEQN,[L]ZNUM) From SUBANM
+[M:ZSTD0]ZSEQN = [L]ZSEQN
+Affzo [M:ZSTD0]ZSEQN
+Return
+
+
+$APRES_CRE
+If !clalev([F:ZSTDD]) : Local File ZSTDDET[F:ZSTDD] : Endif
+Local Integer I : I=0
+For I=0 To [M:ZSTD1]NBLIG-1
+    [F:ZSTDD]ZSTDDID=[M:ZSTD0]ZSTDID
+    [F:ZSTDD]ZRMNM=[M:ZSTD1]ZRMNM(I)
+    [F:ZSTDD]ZSECTOR=[M:ZSTD1]ZSECTOR(I)
+    [F:ZSTDD]ZCITY=[M:ZSTD1]ZCITY(I)
+    [F:ZSTDD]ZADDCOD=[M:ZSTD1]ZADDCOD(I)
+    [F:ZSTDD]ZSTDLIN=(I+1)*1000
+    Write [F:ZSTDD]
+Next I
+
+If !clalev([F:ZSTDC]) : Local File ZSTDC[F:ZSTDC] : Endif
+Local Integer J : J=0
+For J=0 To [M:ZSTDC1]NBLIG-1
+    [F:ZSTDC]ZSTDID=[M:ZSTD0]ZSTDID
+    [F:ZSTDC]ZSTDCID=[M:ZSTDC1]ZSTDCID(J)
+    [F:ZSTDC]ZSTDCNM=[M:ZSTDC1]ZSTDCNM(J)
+    [F:ZSTDC]ZSTDCD=[M:ZSTDC1]ZSTDCD(J)
+    [F:ZSTDC]ZSTDG=[M:ZSTDC1]ZSTDG(J)
+    [F:ZSTDC]ZSTDLIN=(J+1)*1000
+    Write [F:ZSTDC]
+Next J
+Return
+
+
+$LIENS
+If !clalev([F:ZSTDD]) : Local File ZSTDDET[F:ZSTDD] : Endif
+Local Integer I : I=0
+For [F:ZSTDD] Where [F:ZSTDD]ZSTDDID=[M:ZSTD0]ZSTDID
+  [M:ZSTD1]ZSTDDID(I) = [F:ZSTDD]ZSTDDID
+  [M:ZSTD1]ZRMNM(I) = [F:ZSTDD]ZRMNM
+  [M:ZSTD1]ZSECTOR(I) = [F:ZSTDD]ZSECTOR
+  [M:ZSTD1]ZCITY(I) = [F:ZSTDD]ZCITY
+  [M:ZSTD1]ZADDCOD(I) = [F:ZSTDD]ZADDCOD
+  Affzo [M:ZSTD1]ZRMNM(I)
+  Affzo [M:ZSTD1]ZSECTOR(I)
+  Affzo [M:ZSTD1]ZCITY(I)
+  Affzo [M:ZSTD1]ZADDCOD(I)
+  I = I + 1
+  [M:ZSTD1]NBLIG = I
+Next
+Affzo [M:ZSTD1]
+
+If !clalev([F:ZSTDC]) : Local File ZSTDC[F:ZSTDC] : Endif
+Local Integer J : J=0
+[F:ZSTDC]ZSTDID = [M:ZSTD0]ZSTDID
+For [F:ZSTDC] Where [F:ZSTDC]ZSTDID=[M:ZSTD0]ZSTDID
+  [M:ZSTDC1]ZSTDCID(J) = [F:ZSTDC]ZSTDCID
+  [M:ZSTDC1]ZSTDCNM(J) = [F:ZSTDC]ZSTDCNM
+  [M:ZSTDC1]ZSTDCD(J) = [F:ZSTDC]ZSTDCD
+  [M:ZSTDC1]ZSTDG(J) = [F:ZSTDC]ZSTDG
+  Affzo [M:ZSTDC1]ZSTDCID(J)
+  Affzo [M:ZSTDC1]ZSTDCNM(J)
+  Affzo [M:ZSTDC1]ZSTDCD(J)
+  Affzo [M:ZSTDC1]ZSTDG(J)
+  J = J + 1
+  [M:ZSTDC1]NBLIG = J
+Next
+Affzo [M:ZSTDC1]
+Return
+
+$APRES_MOD
+If !clalev([F:ZSTDD]) : Local File ZSTDDET[F:ZSTDD] : Endif
+Delete [F:ZSTDD] Where [F:ZSTDD]ZSTDDID=[M:ZSTD0]ZSTDID
+Local Integer I : I=0
+For I=0 To [M:ZSTD1]NBLIG-1
+    [F:ZSTDD]ZSTDDID=[M:ZSTD0]ZSTDID
+    [F:ZSTDD]ZRMNM=[M:ZSTD1]ZRMNM(I)
+    [F:ZSTDD]ZSECTOR=[M:ZSTD1]ZSECTOR(I)
+    [F:ZSTDD]ZCITY=[M:ZSTD1]ZCITY(I)
+    [F:ZSTDD]ZADDCOD=[M:ZSTD1]ZADDCOD(I)
+    [F:ZSTDD]ZSTDLIN=(I+1)*1000
+    Write [F:ZSTDD]
+Next I
+
+If !clalev([F:ZSTDC]) : Local File ZSTDC[F:ZSTDC] : Endif
+Delete [F:ZSTDC] Where [F:ZSTDC]ZSTDID=[M:ZSTD0]ZSTDID
+Local Integer J : J=0
+For J=0 To [M:ZSTDC1]NBLIG-1
+    [F:ZSTDC]ZSTDID=[M:ZSTD0]ZSTDID
+    [F:ZSTDC]ZSTDCID=[M:ZSTDC1]ZSTDCID(J)
+    [F:ZSTDC]ZSTDCNM=[M:ZSTDC1]ZSTDCNM(J)
+    [F:ZSTDC]ZSTDCD=[M:ZSTDC1]ZSTDCD(J)
+    [F:ZSTDC]ZSTDG=[M:ZSTDC1]ZSTDG(J)
+    [F:ZSTDC]ZSTDLIN=(J+1)*1000
+    Write [F:ZSTDC]
+Next J
+Return
+
+$ANNULE
+ If !clalev([F:ZSTDD]) : Local File ZSTDDET[F:ZSTDD] : Endif
+Delete [F:ZSTDD] Where [F:ZSTDD]ZSTDDID=[M:ZSTD0]ZSTDID
+
+ If !clalev([F:ZSTDC]) : Local File ZSTDC1[F:ZSTDC1] : Endif
+Delete [F:ZSTDC] Where [F:ZSTDC]ZSTDID=[M:ZSTD0]ZSTDID
+Return
+
+
+Subprog AV_ZSTDFN(VALEUR)
+Variable Char VALEUR()
+#      infbox "Before_Field: Enter data in Field"
+End
+
+Subprog D_ZPHONE(VALEUR)
+Variable Char VALEUR()
+    VALEUR = "0000000000 Default value Initialisation"
+End
+
+Subprog AS_ZSTDLN(VALEUR)
+Variable Char VALEUR()
+#      infbox "Before_Entry: Enter your last name"
+End
+
+
+#Subprog AP_ZSTDFN(VALEUR)
+#Variable Char VALEUR()
+#      infbox "After_Field: First Name Entered"
+#End
+
+
+Subprog C_ZSTDLN(VALEUR)
+Variable Char    VALEUR()
+         If [M:ZSTD0]ZSTDFN = VALEUR
+                Errbox "FirstName and LastName cannot be same"
+                mkstat = 2
+                End
+         Endif
+        Affzo [M:ZSTD0]ZSTDLN
+        If VALEUR = "Raz"
+          Infbox "Raz: Deletes a screen field value"
+          Raz [M:ZSTD0]ZSTDLN
+        Endif
+End
+
+
+Subprog AP_ZPHONE(VALEUR)
+Variable Char VALEUR()
+      If len(VALEUR) <> 10
+           Errbox "Phone no. must be of 10 digit"
+           mkstat = 2
+           End
+      Endif
+      [M:ZSTDG1]ZSTDPHONE = VALEUR
+      Affzo [M:ZSTDG1]ZSTDPHONE
+      Local Char ZSTORE
+      Local Integer ZNUM
+      For I = 1 To len(VALEUR)
+           [L] ZSTORE = mid$(VALEUR, I, 1)
+          If [L]ZSTORE < "0" or [L]ZSTORE > "9"
+              Errbox "Invalid input"
+              mkstat = 2
+              End
+           Endif
+      Next I
+      Affzo [M:ZSTD0]ZPHONE
+End
+End
+
+
+Subprog AM_ZSTDEM(VALEUR)
+Variable Char VALEUR()
+      Local Char ZSTORE
+      Local Integer ZFLAG, ZFLAGU, ZFLAGL
+      For I = 1 To len(VALEUR)
+         [L] ZSTORE = mid$(VALEUR, I, 1)
+          If  [L]ZSTORE = "@"
+              [L]ZFLAG = 1
+          Endif
+      Next I
+     If [L]ZFLAG = 0
+          Errbox "Email must contain @"
+     Endif
+    For I = 1 To len(VALEUR)
+         [L] ZSTORE = mid$(VALEUR, I, 1)
+        If [L]ZSTORE <> "@"
+            If [L]ZSTORE = toupper([L]ZSTORE)
+                    [L]ZFLAGU = 1
+            Endif
+            If [L]ZSTORE = tolower([L]ZSTORE)
+                   [L]ZFLAGL = 1
+            Endif
+        Endif
+    Next I
+    If [L]ZFLAGU = 0
+        Errbox "One uppercase must be there"
+    Endif
+    If [L]ZFLAGL = 0
+        Errbox "One lowercase must be there"
+    Endif
+End
+
+Subprog AP_ZSTDFN(VALEUR)
+Variable Char VALEUR()
+      Local Char ZSTORE
+      For I = 1 To len(VALEUR)
+           [L] ZSTORE = mid$(VALEUR, I, 1)
+           If ([L]ZSTORE < "A" | [L]ZSTORE > "Z") & ([L]ZSTORE < "a" | [L]ZSTORE > "z")
+              Errbox "Invalid input"
+              mkstat = 2
+              End
+           Endif
+      Next I
+      If VALEUR = ""
+           Errbox "Name cannot be blank"
+           mkstat = 2
+           End
+      Endif
+End
+
+Subprog AP_ZSTDLN(VALEUR)
+Variable Char VALEUR()
+      Local Char ZSTORE
+      For I = 1 To len(VALEUR)
+           [L] ZSTORE = mid$(VALEUR, I, 1)
+           If ([L]ZSTORE < "A" | [L]ZSTORE > "Z") & ([L]ZSTORE < "a" | [L]ZSTORE > "z")
+              Errbox "Invalid input"
+              mkstat = 2
+              End
+           Endif
+      Next I
+      Affzo [M:ZSTD0]ZSTDLN
+End
+
+Subprog AP_ZSTDID(VALEUR)
+Variable Char VALEUR()
+      If VALEUR = ""
+           Errbox "Id is Mandatory"
+           mkstat = 2
+           End
+      Endif
+      Affzo [M:ZSTD0]ZSTDID
+End
+
+Subprog IB_NBLIG
+    #infbox "Enter Address details"
+    #You can pass default values as well
+End
+
+Subprog S_ZSTDG(VALEUR)
+Variable Integer VALEUR
+    If VALEUR = 1
+        Infbox "Gender : Male"
+    Else
+        Infbox "Gender : Female"
+    Endif
+End
+
+
+Subprog B1_NBLIG
+   # infbox "Botton action triggered"
+End
+
+Subprog B2_ZSTDGID(VALEUR)
+Variable Char    VALEUR()
+    VALEUR = 20
+   # infbox "Default ID: 20"
+End
+
+
+Subprog AVANT_NBLIG
+      #infbox "Enter Course Details"
+End
+
+
+Subprog APRES_NBLIG
+       #infbox "Course Details submitted"
+End
+
+Subprog C_ZSTDDID(VALEUR)
+Variable Char    VALEUR()
+      If VALEUR <> [M:ZSTD0]ZSTDID
+         Errbox "Student ID must be same"
+         mkstat = 2
+         End
+     Endif
+End
+
+Subprog C_ZCITY(VALEUR)
+Variable Char    VALEUR()
+    Local Char ZCHAR
+    For I = 1 To len(VALEUR)
+    [L] ZCHAR = mid$(VALEUR, I, 1)
+      If ([L]ZCHAR < "a" | [L]ZCHAR > "z") & ([L]ZCHAR < "A" | [L]ZCHAR > "Z")
+          Errbox "Invalid Input"
+          mkstat = 2
+         End
+      Endif
+   Next I
+End
+
+
+
+
+Subprog C_ZSTDGNM(VALEUR)
+Variable Char    VALEUR()
+          Local Char ZCHAR
+         For I = 1 To len(VALEUR)
+            [L]ZCHAR = mid$(VALEUR, I, 1)
+             If ([L]ZCHAR < "a" | [L]ZCHAR > "z") & ([L]ZCHAR < "A" | [L]ZCHAR > "Z")
+               Errbox "Invalid Input"
+               mkstat = 2
+               End
+             Endif
+         Next I
+End
+
+
+Subprog C_ZSTDPHONE(VALEUR)
+Variable Char    VALEUR()
+       Local Char ZCHAR
+         For I = 1 To len(VALEUR)
+           [L] ZCHAR = mid$(VALEUR, I, 1)
+           If [L]ZCHAR<"0" | [L]ZCHAR>"9" | len(VALEUR) <> 10
+              Errbox "Invalid Input"
+              mkstat = 2
+              End
+           Endif
+         Next I
+End
+
+
+Subprog AS_ZADDCOD(VALEUR)
+Variable Char    VALEUR()
+       VALEUR = "Room No. "+num$(ZRMNM(nolign-1)) +", Sector-"+num$(ZSECTOR(nolign-1))+", "+ZCITY(nolign-1)
+End
+
+
+Subprog AS_ZSTDGAGE(VALEUR)
+Variable Decimal VALEUR
+         #infbox num$((year(date$)) - (year(ZSTDGDOB)))
+         VALEUR = num$((year(date$)) - (year(ZSTDGDOB)))
+         Affzo [M:ZSTDG1] ZSTDGAGE
+End
+
+Subprog CL_ZICON(VALEUR)
+Variable Char    VALEUR()
+      #infbox "Click action performed"
+      Callui RETOUR="" With "UIAction="+chr$(1)+"OpenFile", "UILocalDir="+chr$(1)+"HTTPS", "UILocalFile="+chr$(1)+"GOOGLE.COM"
+End
+
+
+
+
+Subprog CL_YTEST(VALEUR)
+Variable Char    VALEUR()
+    # infbox "Click action performed"
+    Callui RETOUR="" With "UIAction="+chr$(1)+"OpenFile", "UILocalDir="+chr$(1)+"HTTPS", "UILocalFile="+chr$(1)+"GOOGLE.COM"
+End
+
+
+
+Subprog C_ZSTDFN(VALEUR)
+Variable Char    VALEUR()
+      If VALEUR = "Rutwik"
+         [M:ZSTD0] ZSTDFN = "Rut"
+         Infbox "Name changed Rut to Rutwik"
+         Grizo [M:ZSTD0] ZSTDFN
+         Infbox "Grizo: Completely disables a screen field"
+      Endif
+       If VALEUR = "Affzo"
+          Infbox "Affzo Refreshes a screen field"
+          Affzo [M:ZSTD0]ZPHONE
+        Endif
+End
+
+##################################################################################################################
+$SETBOUT                                                                                                #003S   
+If BOUT = "i"
+   Local Integer YESNO : YESNO = 0 :# No                                                                #004S
+   Call OUINONT("Do you wand to continue?", YESNO) From GESECRAN
+   If YESNO = 2
+     Local Char FICSRV(250), FICCLI (250)
+     Local Integer ASTATUS
+
+     FICCLI = ""
+     FICSRV = filpath("tmp","","") ## Path to tmp folder
+     Call COPSRV(FICCLI, FICSRV, ASTATUS) From ORDSYS
+     FICSRV = FICSRV +"\"+ FICCLI
+     If ASTATUS = 0
+         [S]adxirs=chr$(13)+chr$(10)
+         [S]adxifs=';'
+         Local Char ZBSTDDID, ZBCITY, ZBADDCOD
+         Local Integer ZBRMNM, ZBSECTOR
+         Openi FICSRV
+         Local Integer I : I=0
+         Repeat
+           Rdseq ZBSTDDID, ZBRMNM, ZBSECTOR, ZBCITY, ZBADDCOD
+           If ZBSTDDID <> ""
+             Infbox ZBSTDDID-num$(ZBRMNM)-num$(ZBSECTOR)-ZBCITY-ZBADDCOD
+             [M:ZSTD1]ZSTDDID(I) = ZBSTDDID
+             [M:ZSTD1]ZRMNM(I) = ZBRMNM
+             [M:ZSTD1]ZSECTOR(I) = ZBSECTOR
+             [M:ZSTD1]ZCITY(I) = ZBCITY
+             [M:ZSTD1]ZADDCOD(I) = ZBADDCOD
+             I = I + 1
+            [M:ZSTD1]NBLIG = I
+          Endif
+       Until fstat<>0
+       Openi
+       Affzo [M:ZSTD1]
+    Else
+       Infbox "Unsuccessful!"
+    Endif
+    Else 
+        infbox  "Operation Cancelled"
+   EndIF                                                                                                #004S
+Endif
+
+If BOUT = "e"
+  Local Char ZSEQ(8)
+  Local Integer ZNUM(8)
+  Call NUMERO("ZSEQ","",date$,"",[L]ZSEQ,[L]ZNUM)From SUBANM
+  Openo filpath('tmp', [L]ZSEQ, "txt")
+  For I=0 To [M:ZSTD1]NBLIG-1
+    Local Char ZBSTDDID :ZBSTDDID =  [M:ZSTD1]ZSTDDID(I)
+    Local Integer ZBRMNM : ZBRMNM = [M:ZSTD1]ZRMNM(I)
+    Local Integer ZBSECTOR : ZBSECTOR = [M:ZSTD1]ZSECTOR(I)
+    Local Char ZBCITY : ZBCITY = [M:ZSTD1]ZCITY(I)
+    Local Char ZBADDCOD : ZBADDCOD = [M:ZSTD1]ZADDCOD(I)
+    [S]adxifs = "-"
+    Wrseq ZBSTDDID, ZBRMNM, ZBSECTOR, ZBCITY, ZBADDCOD
+  Next
+  Openo
+  Local Integer STAT
+  Call COPCLI(filpath('tmp', [L]ZSEQ, "txt"), filpath('tmp', [L]ZSEQ, "txt"), STAT) From ORDSYS
+Endif
+Return                                                                                             #003e
+
+
+
+
+##########################################################################################################

@@ -1,0 +1,264 @@
+####################################################################################
+# Program Name: ZSPESTD
+# Description : Action Types Task Complition script Assigned by Shraddha Mam
+# Author      : GT-RB
+# Date        : 06-09-2024
+# Type        : SPE
+####################################################################################
+# 000   Original version
+####################################################################################
+####################################################################################
+## Change Log
+## Rev  Issue Number    Date    User     Description
+## ---------------------------------------------------------------------------------
+## 001    REQ0001     20240905  GT_RB    Change in script by using Before_Field, Initialisation, Before_Entry, Control, After_Field, After_Change
+
+## 002    REQ0002     20240906  GT_RB    Converting Window into real life usable interface
+####################################################################################
+
+$Action
+
+Return
+
+
+Subprog AV_ZSTDFN(VALEUR)
+Variable Char VALEUR()
+#      infbox "Before_Field: Enter data in Field"
+End
+
+Subprog D_ZPHONE(VALEUR)
+Variable Char VALEUR()
+    VALEUR = "0000000000 Default value Initialisation"
+End
+
+Subprog AS_ZSTDLN(VALEUR)
+Variable Char VALEUR()
+      infbox "Before_Entry: Enter your last name"
+End
+
+
+#Subprog AP_ZSTDFN(VALEUR)
+#Variable Char VALEUR()
+#      infbox "After_Field: First Name Entered"
+#End
+
+
+Subprog C_ZSTDLN(VALEUR)
+Variable Char    VALEUR()
+         if [M:ZSTD0]ZSTDFN = VALEUR
+                Errbox "FirstName and LastName cannot be same"
+                MKSTAT = 2
+                END
+         EndIf
+        AFFZO [M:ZSTD0]ZSTDLN
+End
+
+Subprog AP_ZPHONE(VALEUR)
+Variable Char VALEUR()
+      if len(VALEUR) <> 10
+           Errbox "Phone no. must be of 10 digit"
+           MKSTAT = 2
+           END
+      EndIf
+      [M:ZSTDG1]ZSTDPHONE = VALEUR
+      AFFZO [M:ZSTDG1]ZSTDPHONE
+      Local Char ZSTORE
+      Local Integer ZNUM
+      for I = 1 to len(VALEUR)
+           [L] ZSTORE = mid$(VALEUR, I, 1)
+          If [L]ZSTORE < "0" Or [L]ZSTORE > "9"
+              Errbox "Invalid input"
+              MKSTAT = 2
+              END
+           Endif
+      Next I
+      AFFZO [M:ZSTD0]ZPHONE
+End
+End
+
+
+Subprog AM_ZSTDEM(VALEUR)
+Variable Char VALEUR()
+      Local Char ZSTORE
+      Local Integer ZFLAG, ZFLAGU, ZFLAGL
+      for I = 1 to len(VALEUR)
+         [L] ZSTORE = mid$(VALEUR, I, 1)
+          if  [L]ZSTORE = "@" 
+              [L]ZFLAG = 1
+          EndIf
+      Next I
+     if [L]ZFLAG = 0
+          Errbox "Email must contain @"
+     EndIf
+    for I = 1 to len(VALEUR)
+         [L] ZSTORE = mid$(VALEUR, I, 1)
+        if [L]ZSTORE <> "@"
+            if [L]ZSTORE = toupper([L]ZSTORE)
+                    [L]ZFLAGU = 1
+            EndIf
+            if [L]ZSTORE = tolower([L]ZSTORE)
+                   [L]ZFLAGL = 1
+            EndIf
+        EndIf
+    Next I
+    if [L]ZFLAGU = 0
+        Errbox "One uppercase must be there"
+    EndIF
+    if [L]ZFLAGL = 0
+        Errbox "One lowercase must be there"
+    EndIF
+End
+
+Subprog AP_ZSTDFN(VALEUR)
+Variable Char VALEUR()
+      Local Char ZSTORE
+      for I = 1 to len(VALEUR)
+           [L] ZSTORE = mid$(VALEUR, I, 1)
+           If ([L]ZSTORE < "A" | [L]ZSTORE > "Z") & ([L]ZSTORE < "a" | [L]ZSTORE > "z") 
+              Errbox "Invalid input"
+              MKSTAT = 2
+              END
+           Endif
+      Next I
+      if VALEUR = ""
+           Errbox "Name cannot be blank"
+           MKSTAT = 2
+           END
+      EndIf
+End
+
+Subprog AP_ZSTDLN(VALEUR)
+Variable Char VALEUR()
+      Local Char ZSTORE
+      for I = 1 to len(VALEUR)
+           [L] ZSTORE = mid$(VALEUR, I, 1)
+           If ([L]ZSTORE < "A" | [L]ZSTORE > "Z") & ([L]ZSTORE < "a" | [L]ZSTORE > "z") 
+              Errbox "Invalid input"
+              MKSTAT = 2
+              END
+           Endif
+      Next I
+      AFFZO [M:ZSTD0]ZSTDLN 
+End
+
+Subprog AP_ZSTDID(VALEUR)
+Variable Char VALEUR()
+      If VALEUR = ""
+           Errbox "Id must be there"
+           MKSTAT = 2
+           END
+      EndIf 
+      AFFZO [M:ZSTD0]ZSTDID
+End
+
+Subprog IB_NBLIG
+    infbox "Enter Address details"
+    #You can pass default values as well
+End
+
+Subprog S_ZSTDG(VALEUR)
+Variable Integer VALEUR
+    if VALEUR = 1
+        infbox "Gender : Male"
+    Else 
+        infbox "Gender : Female"
+    EndIf
+End
+
+
+Subprog B1_NBLIG
+    infbox "Botton action triggered"	
+End
+
+Subprog B2_ZSTDGID(VALEUR)
+Variable Char    VALEUR()
+    VALEUR = 20
+    infbox "Default ID: 20"
+End
+
+
+Subprog AVANT_NBLIG
+      infbox "Enter Course Details"
+End
+
+
+Subprog APRES_NBLIG
+       infbox "Course Details submitted"
+End
+
+Subprog C_ZSTDDID(VALEUR)
+Variable Char    VALEUR()
+      if VALEUR <> [M:ZSTD0]ZSTDID
+         ErrBox "Student ID must be same"
+         MKSTAT = 2
+         END
+     EndIF
+End
+
+Subprog C_ZCITY(VALEUR)
+Variable Char    VALEUR()
+    Local Char ZCHAR
+    for I = 1 to len(VALEUR)
+    [L] ZCHAR = mid$(VALEUR, I, 1)
+      if ([L]ZCHAR < "a" | [L]ZCHAR > "z") & ([L]ZCHAR < "A" | [L]ZCHAR > "Z")
+          ErrBox "Invalid Input"
+          MKSTAT = 2
+         END
+      EndIf
+   Next I
+End
+
+
+
+
+Subprog C_ZSTDGNM(VALEUR)
+Variable Char    VALEUR()
+          Local Char ZCHAR
+         for I = 1 to len(VALEUR)
+            [L]ZCHAR = mid$(VALEUR, I, 1)
+             if ([L]ZCHAR < "a" | [L]ZCHAR > "z") & ([L]ZCHAR < "A" | [L]ZCHAR > "Z")
+               ErrBox "Invalid Input"
+               MKSTAT = 2
+               END
+             EndIf     
+         Next I
+End
+
+
+Subprog C_ZSTDPHONE(VALEUR)
+Variable Char    VALEUR()
+       Local Char ZCHAR
+         for I = 1 to len(VALEUR)
+           [L] ZCHAR = mid$(VALEUR, I, 1)
+           if [L]ZCHAR<"0" | [L]ZCHAR>"9" | len(VALEUR) <> 10
+              ErrBox "Invalid Input"
+              MKSTAT = 2
+              End
+           EndIf 
+         NEXT I 
+End
+
+
+Subprog AS_ZADDCOD(VALEUR)
+Variable Char    VALEUR()
+       VALEUR = "Room No. "+num$(ZRMNM) +", Sector-"+num$(ZSECTOR)+", "+ZCITY
+End
+
+
+Subprog AS_ZSTDGAGE(VALEUR)
+Variable Decimal VALEUR
+         #infbox num$((year(date$)) - (year(ZSTDGDOB)))
+         VALEUR = num$((year(date$)) - (year(ZSTDGDOB)))
+         AFFZO [M:ZSTDG1] ZSTDGAGE
+End
+
+######################################################################################
+Subprog CL_ZICON(VALEUR)
+Variable Char    VALEUR()
+       Callui RETOUR="" With "UIAction="+chr$(1)+"OpenFile", "UILocalDir="+chr$(1)+"HTTPS", "UILocalFile="+chr$(1)+"GOOGLE.COM"
+End
+######################################################################################
+
+
+
+

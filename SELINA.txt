@@ -1,0 +1,43 @@
+######################################################################################
+# Program Name: ZSPESELBOL
+# Description : Selection field for Sales BOL
+# Author      : GT-ARAW
+# Date        : Dec 28, 2022
+######################################################################################
+
+
+######## Create an action and add with the action added on the field ###### 
+######## In the action created add template as list selection and type as Selection #####
+######## Add the below script to the action's script ######
+
+$Action
+	Case action
+		When "SEL_LISTE" : Gosub SEL_LISTE
+	Endcase
+Return
+
+$SEL_LISTE
+	Local Integer I
+	Local Char TIT(80)(1..3)
+	Local Char TEX(80)(1..9999)
+	Local Char TEXTE(80)(1..9999,1..2)
+	TIT(1) = 'Customer Selection'
+	TIT(2) = 'Customer'
+	TIT(3) = 'Description'
+	
+	If !clalev ([F:ZBPC]) : local file BPCUSTOMER[F:ZBPC] : Endif
+	Filter [F:ZBPC]
+	For [F:ZBPC]
+
+		If I >= 9999
+			Break
+		Endif
+		
+		I += 1
+		TEX(I) = [F:ZBPC]BPCNUM
+		TEXTE(I,1) = [F:ZBPC]BPCNUM
+		TEXTE(I,2) = [F:ZBPC]BPCNAM
+	Next
+		NBTEX = I
+	Close File [F:ZBPC]	
+Return
